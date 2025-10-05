@@ -99,7 +99,7 @@ export function HomeScreen({ navigation }) {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#f7f7f7" }}>
+    <View style={{ flex: 1, backgroundColor: "#f7f7f7", marginTop:20 }}>
       {/* 🔍 Fixed search bar */}
       <View style={{ flexDirection: "row", margin: 15, marginTop: 25, padding: 10, backgroundColor: "#fff", borderRadius: 10, elevation: 3 }}>
         <MagnifyingGlass size={28} color="#333" weight="bold" style={{ marginRight: 8 }} />
