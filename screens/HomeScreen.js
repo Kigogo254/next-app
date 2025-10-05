@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
-  StyleSheet,
-  Text,
   View,
+  Text,
   TextInput,
   ScrollView,
   Image,
@@ -20,16 +19,30 @@ export function HomeScreen({ navigation }) {
   const [bannerIndex, setBannerIndex] = useState(0);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // 🔍 New search state
+  const [imagesLoaded, setImagesLoaded] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // 🧠 Fetch products from backend
+  // 🧠 Fetch products
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await axios.get("http://10.132.72.106:5000/api/products");
+        const res = await axios.get("https://eco-backend-lime.vercel.app/api/products");
         setProducts(res.data);
+
+        const imageUrls = res.data.map(
+          (p) => p.images?.[0] || p.display_photo
+        );
+
+        await Promise.all(
+          imageUrls.map(
+            (url) =>
+              new Promise((resolve) => {
+                const img = Image.prefetch(url);
+                resolve(img);
+              })
+          )
+        );
+        setImagesLoaded(true);
       } catch (err) {
         console.error("Error fetching products:", err);
       } finally {
@@ -39,7 +52,7 @@ export function HomeScreen({ navigation }) {
     fetchProducts();
   }, []);
 
-  // 🌀 Auto-slide banner
+  // 🌀 Banner auto-slide
   const bannerImages = [
     "https://picsum.photos/id/1018/600/300",
     "https://picsum.photos/id/1015/600/300",
@@ -48,14 +61,13 @@ export function HomeScreen({ navigation }) {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      let nextIndex = (bannerIndex + 1) % bannerImages.length;
+      const nextIndex = (bannerIndex + 1) % bannerImages.length;
       scrollRef.current?.scrollTo({ x: width * nextIndex, animated: true });
       setBannerIndex(nextIndex);
     }, 3000);
     return () => clearInterval(interval);
   }, [bannerIndex]);
 
-  // ⭐ Render rating stars
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -68,284 +80,153 @@ export function HomeScreen({ navigation }) {
         />
       );
     }
-    return <View style={styles.starRow}>{stars}</View>;
+    return <View style={{ flexDirection: "row", marginVertical: 3 }}>{stars}</View>;
   };
 
-  // 🔎 Filter products based on search query
   const filteredProducts = products.filter(
     (p) =>
       p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  if (loading || !imagesLoaded) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#e63946" />
+        <Text style={{ marginTop: 10, color: "#444" }}>Loading products...</Text>
+      </View>
+    );
+  }
+
   return (
-    <ScrollView style={styles.container}>
-      {/* 🔍 Search Bar */}
-      <View style={styles.searchContainer}>
+    <View style={{ flex: 1, backgroundColor: "#f7f7f7" }}>
+      {/* 🔍 Fixed search bar */}
+      <View style={{ flexDirection: "row", margin: 15, marginTop: 25, padding: 10, backgroundColor: "#fff", borderRadius: 10, elevation: 3 }}>
         <MagnifyingGlass size={28} color="#333" weight="bold" style={{ marginRight: 8 }} />
         <TextInput
           placeholder="Search products..."
-          style={styles.searchInput}
           value={searchQuery}
           onChangeText={setSearchQuery}
+          style={{ flex: 1 }}
         />
       </View>
 
-      {/* 🖼 Banner */}
-      <ScrollView
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        ref={scrollRef}
-        style={styles.bannerContainer}
-      >
-        {bannerImages.map((img, index) => (
-          <View key={index} style={styles.bannerWrapper}>
-            <Image source={{ uri: img }} style={styles.bannerImage} />
-            <TouchableOpacity
-              style={styles.shopNowBtn}
-              onPress={() => navigation.navigate("Search")}
-            >
-              <Text style={styles.shopNowText}>Shop Now</Text>
-            </TouchableOpacity>
-          </View>
-        ))}
-      </ScrollView>
-
-      {/* 🛒 Products */}
-      <Text style={styles.sectionTitle}>🛍️ Products</Text>
-
-      {loading ? (
-        <ActivityIndicator size="large" color="#e63946" style={{ marginTop: 30 }} />
-      ) : (
-        <>
-          {filteredProducts.length === 0 ? (
-            <Text style={{ textAlign: "center", color: "gray", marginTop: 20 }}>
-              No products found
-            </Text>
-          ) : (
-            <View style={styles.productGrid}>
-              {filteredProducts.map((item, index) => {
-                const stock = item.countInStock || 0;
-                const stockColor =
-                  stock < 20 ? "red" : stock <= 35 ? "blue" : "green";
-                const oldPrice =
-                  item.previousPrice || Math.round(item.currentPrice * 1.15);
-
-                return (
-                  <TouchableOpacity
-                    key={index}
-                    style={styles.card}
-                    activeOpacity={0.8}
-                    onPress={() =>
-                      navigation.navigate("ProductDetail", { product: item })
-                    }
-                  >
-                    <Image
-                      source={{ uri: item.images?.[0] || item.display_photo }}
-                      style={styles.image}
-                    />
-
-                    <View style={styles.info}>
-                      <Text style={styles.title}>{item.name}</Text>
-
-                      {renderStars(item.rating || 0)}
-
-                      <Text style={styles.description}>
-                        {item.description && item.description.length > 14
-                          ? item.description.slice(0, 14) + "..."
-                          : item.description}
-                      </Text>
-
-                      {/* 💰 Prices */}
-                      <View style={styles.priceRow}>
-                        <Text style={styles.oldPrice}>Ksh {oldPrice}</Text>
-                        <Text style={styles.newPrice}>Ksh {item.currentPrice}</Text>
-                      </View>
-
-                      {/* 📊 Stock Bar */}
-                      <View style={styles.stockContainer}>
-                        <View
-                          style={[
-                            styles.stockBar,
-                            {
-                              width: `${(stock / 50) * 100}%`,
-                              backgroundColor: stockColor,
-                            },
-                          ]}
-                        />
-                      </View>
-                      <Text style={styles.stockText}>{stock} units left</Text>
-
-                      {/* 🛍 Buttons */}
-                      <View style={styles.buttonRow}>
-                        <TouchableOpacity style={styles.cartBtn}>
-                          <Text style={styles.btnText}>Add to Cart</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.buyBtn}>
-                          <Text style={styles.btnText}>Buy Now</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
+      {/* 🖼 Fixed banner with margin and radius */}
+      <View style={{ height: 200, marginHorizontal: 15, marginBottom: 10 }}>
+        <ScrollView
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          ref={scrollRef}
+        >
+          {bannerImages.map((img, index) => (
+            <View key={index} style={{ width, alignItems: "center", justifyContent: "center" }}>
+              <Image
+                source={{ uri: img }}
+                style={{
+                  width: width * 0.9,
+                  height: 180,
+                  borderRadius: 20,
+                  marginHorizontal: width * 0.05,
+                }}
+              />
+              <TouchableOpacity
+                style={{
+                  position: "absolute",
+                  bottom: 25,
+                  backgroundColor: "rgba(0,0,0,0.6)",
+                  paddingVertical: 10,
+                  paddingHorizontal: 25,
+                  borderRadius: 25,
+                }}
+                onPress={() => navigation.navigate("Search")}
+              >
+                <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>Shop Now</Text>
+              </TouchableOpacity>
             </View>
-          )}
-        </>
-      )}
-    </ScrollView>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* 🛍 Scrollable product list only */}
+      <ScrollView contentContainerStyle={{ paddingBottom: 50 }}>
+        <Text style={{ fontSize: 20, fontWeight: "700", margin: 15 }}>🛍️ Products</Text>
+
+        {filteredProducts.length === 0 ? (
+          <Text style={{ textAlign: "center", color: "gray", marginTop: 20 }}>No products found</Text>
+        ) : (
+          <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center" }}>
+            {filteredProducts.map((item, index) => {
+              const stock = item.countInStock || 0;
+              const stockColor = stock < 20 ? "red" : stock <= 35 ? "blue" : "green";
+              const oldPrice = item.previousPrice || Math.round(item.currentPrice * 1.15);
+
+              return (
+                <TouchableOpacity
+                  key={index}
+                  style={{
+                    backgroundColor: "#fff",
+                    borderRadius: 15,
+                    margin: 8,
+                    padding: 10,
+                    width: width / 2 - 20,
+                    elevation: 3,
+                  }}
+                  activeOpacity={0.8}
+                  onPress={() => navigation.navigate("ProductDetail", { product: item })}
+                >
+                  <Image
+                    source={{ uri: item.images?.[0] || item.display_photo }}
+                    style={{ width: "100%", height: 150, borderRadius: 10 }}
+                  />
+
+                  <View style={{ marginTop: 8 }}>
+                    <Text style={{ fontSize: 16, fontWeight: "700", color: "#333" }}>{item.name}</Text>
+                    {renderStars(item.rating || 0)}
+                    <Text style={{ fontSize: 13, color: "#555" }}>
+                      {item.description && item.description.length > 14
+                        ? item.description.slice(0, 14) + "..."
+                        : item.description}
+                    </Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}>
+                      <Text style={{ fontSize: 13, color: "red", textDecorationLine: "line-through", marginRight: 6 }}>
+                        Ksh {oldPrice}
+                      </Text>
+                      <Text style={{ fontSize: 15, fontWeight: "700", color: "#2a9d8f" }}>
+                        Ksh {item.currentPrice}
+                      </Text>
+                    </View>
+
+                    <View style={{ height: 8, backgroundColor: "#ccc", borderRadius: 10, overflow: "hidden", marginTop: 5 }}>
+                      <View
+                        style={{
+                          height: "100%",
+                          width: `${(stock / 50) * 100}%`,
+                          backgroundColor: stockColor,
+                        }}
+                      />
+                    </View>
+                    <Text style={{ fontSize: 12, color: "gray", marginVertical: 3 }}>{stock} units left</Text>
+
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 5 }}>
+                      <TouchableOpacity style={{ flex: 1, backgroundColor: "#457b9d", paddingVertical: 8, borderRadius: 8, marginRight: 5 }}>
+                        <Text style={{ color: "#fff", fontWeight: "600", textAlign: "center", fontSize: 13 }}>
+                          Add to Cart
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={{ flex: 1, backgroundColor: "#e63946", paddingVertical: 8, borderRadius: 8, marginLeft: 5 }}>
+                        <Text style={{ color: "#fff", fontWeight: "600", textAlign: "center", fontSize: 13 }}>
+                          Buy Now
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
+      </ScrollView>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#919397ff",
-  },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    margin: 15,
-    padding: 10,
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    marginTop: 30,
-    elevation: 3,
-  },
-  searchInput: {
-    fontSize: 16,
-    flex: 1,
-  },
-  bannerContainer: { marginBottom: 20 },
-  bannerWrapper: {
-    width,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  bannerImage: {
-    width: width * 0.9,
-    height: 180,
-    borderRadius: 15,
-  },
-  shopNowBtn: {
-    position: "absolute",
-    bottom: 20,
-    backgroundColor: "rgba(0,0,0,0.6)",
-    paddingVertical: 10,
-    paddingHorizontal: 25,
-    borderRadius: 25,
-  },
-  shopNowText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 16,
-    textAlign: "center",
-  },
-  bannerImage: {
-    width: width * 0.9,
-    height: 180,
-    marginHorizontal: width * 0.05,
-    borderRadius: 15,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    marginLeft: 15,
-    marginVertical: 10,
-    color: "#333",
-  },
-  productGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-  },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 15,
-    margin: 8,
-    padding: 10,
-    width: width / 2 - 20,
-    elevation: 3,
-  },
-  image: {
-    width: "100%",
-    height: 150,
-    borderRadius: 10,
-  },
-  info: {
-    marginTop: 8,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#333",
-  },
-  starRow: {
-    flexDirection: "row",
-    marginVertical: 3,
-  },
-  description: {
-    fontSize: 13,
-    color: "#555",
-    marginVertical: 4,
-  },
-  priceRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 2,
-  },
-  oldPrice: {
-    fontSize: 13,
-    color: "red",
-    textDecorationLine: "line-through",
-    marginRight: 6,
-  },
-  newPrice: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#2a9d8f",
-  },
-  stockContainer: {
-    height: 8,
-    backgroundColor: "#a7a4a4ff",
-    borderRadius: 10,
-    overflow: "hidden",
-    marginTop: 5,
-  },
-  stockBar: {
-    height: "100%",
-    borderRadius: 10,
-  
-  },
-  stockText: {
-    fontSize: 12,
-    color: "gray",
-    marginVertical: 3,
-  },
-  buttonRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 5,
-  },
-  cartBtn: {
-    flex: 1,
-    backgroundColor: "#457b9d",
-    paddingVertical: 8,
-    borderRadius: 8,
-    marginRight: 5,
-  },
-  buyBtn: {
-    flex: 1,
-    backgroundColor: "#e63946",
-    paddingVertical: 8,
-    borderRadius: 8,
-    marginLeft: 5,
-  },
-  btnText: {
-    color: "#fff",
-    fontWeight: "600",
-    textAlign: "center",
-    fontSize: 13,
-  },
-});

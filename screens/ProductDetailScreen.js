@@ -10,7 +10,6 @@ import {
   Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
 import { Star } from "phosphor-react-native";
 import axios from "axios";
 
@@ -24,7 +23,7 @@ export function ProductDetailScreen({ route, navigation }) {
   useEffect(() => {
     const fetchRelated = async () => {
       try {
-        const res = await axios.get("http://10.132.72.106:5000/api/products");
+        const res = await axios.get("https://eco-backend-lime.vercel.app/api/products");
         setRelated(res.data.filter((p) => p._id !== product._id));
       } catch (err) {
         console.error("Error fetching related products:", err);
@@ -57,9 +56,13 @@ export function ProductDetailScreen({ route, navigation }) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        <Text>We knew you like ,{product.name}, Go ahead and purchase one!!!</Text>
-        {/* 🖼 Main Image */}
+      {/* 🔝 Fixed main image and selector */}
+      <View style={styles.topSection}>
+        <Text style={styles.introText}>
+          We knew you like <Text style={{ fontWeight: "700" }}>{product.name}</Text> — go ahead and grab one!
+        </Text>
+
+        {/* 🖼 Main Product Image */}
         <Image source={{ uri: mainImage }} style={styles.mainImage} />
 
         {/* 🖼 Thumbnail Selector */}
@@ -81,8 +84,14 @@ export function ProductDetailScreen({ route, navigation }) {
             </TouchableOpacity>
           )}
         />
+      </View>
 
-        {/* 📄 Product Info */}
+      {/* 🧾 Scrollable product details */}
+      <ScrollView
+        style={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 40 }}
+      >
         <View style={styles.infoContainer}>
           <Text style={styles.name}>{product.name}</Text>
           {renderStars(product.rating)}
@@ -92,7 +101,7 @@ export function ProductDetailScreen({ route, navigation }) {
             <Text style={styles.newPrice}>Ksh {product.currentPrice}</Text>
           </View>
 
-          {/* 📊 Stock Bar */}
+          {/* 📊 Stock bar */}
           <View style={styles.stockContainer}>
             <View
               style={[
@@ -109,7 +118,7 @@ export function ProductDetailScreen({ route, navigation }) {
           {/* 📝 Description */}
           <Text style={styles.description}>{product.description}</Text>
 
-          {/* 🛍 Buttons */}
+          {/* 🛍 Action buttons */}
           <View style={styles.buttonRow}>
             <TouchableOpacity style={styles.cartBtn}>
               <Text style={styles.cartText}>Add to Cart</Text>
@@ -152,29 +161,29 @@ export function ProductDetailScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#c4c0c0ff",
-  },
-  container: {
-    flex: 1,
     backgroundColor: "#f9f9f9",
-    padding: 10,
+  },
+  topSection: {
+    backgroundColor: "#f1f1f1",
+    paddingBottom: 10,
+    elevation: 3,
+  },
+  introText: {
+    textAlign: "center",
+    marginTop: 10,
+    color: "#444",
   },
   mainImage: {
     width: "100%",
     height: 300,
-    marginTop:20,
+    marginTop: 10,
     borderRadius: 10,
     resizeMode: "cover",
   },
   thumbContainer: {
     flexDirection: "row",
-    paddingHorizontal: 5,
-    marginVertical: 5,
-    borderWidth: 1,
-    width : "100%",
-    borderColor: "#2196F3",
-    borderRadius: 10,
-    padding: 5,
+    paddingVertical: 8,
+    justifyContent: "center",
   },
   thumbImage: {
     width: 70,
@@ -182,12 +191,16 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginHorizontal: 5,
   },
+  scrollContent: {
+    flex: 1,
+    backgroundColor: "#f9f9f9",
+  },
   infoContainer: {
     backgroundColor: "#fff",
     margin: 10,
     borderRadius: 10,
     padding: 15,
-    elevation: 1,
+    elevation: 2,
   },
   name: {
     fontSize: 22,
@@ -212,7 +225,7 @@ const styles = StyleSheet.create({
   },
   stockContainer: {
     height: 8,
-    backgroundColor:  "#a7a4a4ff",
+    backgroundColor: "#ddd",
     borderRadius: 10,
     marginVertical: 6,
     overflow: "hidden",
@@ -241,17 +254,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#555",
     paddingVertical: 12,
-     paddingHorizontal: 10,
     borderRadius: 8,
-    marginRight: 3,
+    marginRight: 5,
   },
   buyBtn: {
     flex: 1,
     backgroundColor: "green",
     paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 10,
-    marginLeft: 3,
+    borderRadius: 8,
+    marginLeft: 5,
   },
   cartText: {
     color: "#fff",
@@ -276,16 +287,16 @@ const styles = StyleSheet.create({
   },
   relatedCard: {
     backgroundColor: "#fff",
-    width: 150,
+    width: 200,
     margin: 8,
     borderRadius: 10,
-    padding: 2,
+    padding: 5,
     alignItems: "center",
-    elevation: 3,
+    elevation: 2,
   },
   relatedImage: {
-    width: 100,
-    height: 130,
+    width: 180,
+    height: 250,
     borderRadius: 10,
   },
   relatedName: {

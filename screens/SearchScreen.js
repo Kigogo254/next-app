@@ -25,7 +25,8 @@ export function SearchScreen({ navigation }) {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await axios.get("http://10.132.72.106:5000/api/products");
+        const res = await axios.get("https://eco-backend-lime.vercel.app/api/products");
+
         setProducts(res.data);
         setFiltered(res.data);
       } catch (err) {

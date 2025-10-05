@@ -78,7 +78,7 @@ export function ProfileScreen({ navigation }) {
           }}
         />
       </View>
-      <View style={styles.menu}>
+      <View style={styles.texting}>
       <Text>Nairobi is Kenya’s capital city. In addition to its urban core, the city has Nairobi National Park, a large game reserve known for breeding endangered black rhinos and home to giraffes, zebras and lions. Next to it is a well-regarded elephant orphanage operated by the David Sheldrick Wildlife Trust. Nairobi is also often used as a jumping-off point for safari trips elsewhere in Kenya. ― Google</Text>
     </View>
     </ScrollView>
@@ -135,6 +135,9 @@ const styles = StyleSheet.create({
   statBox: {
     alignItems: "center",
   },
+  texting :{
+      padding: 10,
+  },
   statNumber: {
     fontSize: 18,
     fontWeight: "700",
@@ -151,6 +154,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     paddingVertical: 10,
     elevation: 2,
+    padding: 6,
   },
   menuItem: {
     flexDirection: "row",

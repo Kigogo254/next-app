@@ -9,6 +9,10 @@ import { HomeScreen } from "./screens/HomeScreen";
 import { SearchScreen } from "./screens/SearchScreen";
 import { ProfileScreen } from "./screens/ProfileScreen";
 import { ProductDetailScreen } from "./screens/ProductDetailScreen";
+import { OrdersScreen } from "./screens/OrdersScreen";
+import { CartScreen } from "./screens/CartScreen";
+import { WishlistScreen } from "./screens/WishlistScreen";
+import { SettingsScreen } from "./screens/SettingsScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -38,6 +42,10 @@ function ProfileStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="ProfileMain" component={ProfileScreen} />
+      <Stack.Screen name="Orders" component={OrdersScreen} />
+      <Stack.Screen name="Cart" component={CartScreen} />
+      <Stack.Screen name="Wishlist" component={WishlistScreen} />
+      <Stack.Screen name="Settings" component={SettingsScreen} />
     </Stack.Navigator>
   );
 }
